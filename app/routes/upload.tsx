@@ -60,7 +60,7 @@ const upload = () => {
                           <label htmlFor='uploader' className='font-bold'>
                               Upload Resume
                           </label>
-                          <FileUplodaer/>
+                          <FileUplodaer onFileSelect={handleFileSelect}/>
                       </div>
 
                       <button className='primary-button' type='submit'>
