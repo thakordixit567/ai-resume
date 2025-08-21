@@ -5,6 +5,11 @@ import Navbar from '~/components/Navbar'
 const upload = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setstatusText] = useState('');
+  const [file, setFile] = useState<File | null>(null)
+
+  const handleFileSelect = (file: File | null) => {
+    setFile(file)
+  }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 
