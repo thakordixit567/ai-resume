@@ -44,6 +44,10 @@ const FileUplodaer = ({onFileSelect}: FileUploderProps) => {
                </div>
            
             </div>
+            <button className='p-2 cursor-pointer' onClick={(e) => {onFileSelect?.(null)
+            }}>
+              <img src='/icons/cross.svg' alt='remove' className='h-4 w-4' />
+            </button>
            </div>
          ): (
           <div>
