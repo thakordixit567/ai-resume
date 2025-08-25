@@ -1,9 +1,11 @@
+import { prepareInstructions } from 'constent';
 import React, { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router';
 import FileUplodaer from '~/components/FileUplodaer';
 import Navbar from '~/components/Navbar'
 import { convertPdfToImage } from '~/lib/pdf2img';
 import { usePuterStore } from '~/lib/puter';
+import { generateUUID } from '~/lib/utils';
 
 const upload = () => {
   const { auth, isLoading,fs, ai, kv } = usePuterStore();  
@@ -16,7 +18,7 @@ const upload = () => {
     setFile(file)
   }
 
-  const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file} : { companyName: string, jobTitle: String, jobDescription: String, file: File }) => {
+  const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file} : { companyName: string, jobTitle: string, jobDescription: string, file: File }) => {
     setIsProcessing(true);
     setstatusText('Uploading the file...');
 
@@ -29,6 +31,35 @@ const upload = () => {
 
     setstatusText('Uploading the image....');
     const uploadedImage = await fs.upload([imageFile.file]);
+    if(!uploadedImage) return setstatusText('Error: Failed to upload image');
+
+    setstatusText('Preparing Data....');
+
+    const uuid = generateUUID();
+    const data = {
+        id: uuid,
+        resumePath: uploadFile.path,
+        imagePath: uploadedImage.path,
+        companyName,jobTitle,jobDescription,
+        feedback: '',
+
+    }
+    await kv.set(`resume:${uuid}`, JSON.stringify(data));
+    setstatusText('Analyzing....');
+    const feedback = await ai.feedback(
+        uploadFile.path,
+        prepareInstructions({ jobTitle, jobDescription }),
+    )
+    if (!feedback) return setstatusText('Error: Failed to analyze resume');
+    const feedbackText = typeof feedback.message.content === 'string'
+    ? feedback.message.content
+    : feedback.message.content[0].text;
+
+    data.feedback = JSON.parse(feedbackText);
+    await kv.set(`resume:${uuid}`, JSON.stringify(data));
+    setstatusText('Analysis complete, redirecting....');
+    console.log(data);
+
   }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
